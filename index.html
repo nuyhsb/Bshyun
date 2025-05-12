@@ -52,6 +52,7 @@
       max-width: 600px;
       text-align: center;
       line-height: 1.6;
+      white-space: pre-wrap; /* ← 줄바꿈 유지! */
     }
   </style>
 </head>
@@ -79,9 +80,10 @@
           },
           body: JSON.stringify({ message: input }),
         });
-		
-		const data = await response.json();
+
+        const data = await response.json();
         output.innerHTML = data.reply || "응답을 받을 수 없어요.";
+
       } catch (error) {
         console.error(error);
         output.innerHTML = "오류가 발생했어요. 다시 시도해 주세요.";
