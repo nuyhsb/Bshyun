@@ -1,75 +1,194 @@
-<script>
-  async function sendToServer() {
-    const input = document.getElementById('userInput').value;
-    const output = document.getElementById('outputText');
-    const spinner = document.getElementById('spinner');
-    const loadingText = document.getElementById('loadingText');
-
-    spinner.style.display = 'inline-block';
-    loadingText.style.display = 'block';
-    output.innerHTML = "";
-
-    try {
-      const response = await fetch('https://nuyhsb.onrender.com/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await response.json();
-      const reply = data.reply || "응답을 받을 수 없어요.";
-
-      const emphasized = reply
-        .replace(/힘들었어요/g, '<span class="highlight">힘들었어요</span>')
-        .replace(/괜찮아/g, '<span class="highlight">괜찮아</span>')
-        .replace(/고마워/g, '<span class="highlight">고마워</span>')
-        .replace(/응원할게/g, '<span class="highlight">응원할게</span>')
-        .replace(/행복해/g, '<span class="highlight">행복해</span>');
-
-      spinner.style.display = 'none';
-      loadingText.style.display = 'none';
-      typeWriterHTML(emphasized, output);
-
-    } catch (error) {
-      spinner.style.display = 'none';
-      loadingText.style.display = 'none';
-      output.innerHTML = "오류가 발생했어요. 다시 시도해 주세요.";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>하루의 위로</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Gowun Dodum', sans-serif;
+      background: linear-gradient(to bottom, #fff3e0, #ffe0e0);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+      padding: 20px;
     }
-  }
 
-  // HTML을 보존한 채로 출력하는 타자 애니메이션
-  function typeWriterHTML(html, element) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-    let queue = [];
-    (function extractNodes(node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        for (let char of node.textContent) {
-          queue.push({ type: 'text', char });
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const startTag = `<${node.tagName.toLowerCase()} class="${node.className}">`;
-        const endTag = `</${node.tagName.toLowerCase()}>`;
+    .input-box {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
 
-        queue.push({ type: 'html', content: startTag });
-        for (let child of node.childNodes) {
-          extractNodes(child);
-        }
-        queue.push({ type: 'html', content: endTag });
+    input {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ffffffcc;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #ffccda;
+    }
+
+    .result {
+      margin-top: 30px;
+      font-size: 1.3em;
+      max-width: 700px;
+      text-align: center;
+      line-height: 1.8;
+      word-break: keep-all;
+      font-family: 'Nanum Pen Script', cursive;
+      white-space: pre-wrap;
+    }
+
+    .highlight {
+      color: #ff4081;
+      font-weight: bold;
+    }
+
+    #spinner {
+      display: none;
+      margin-top: 20px;
+      border: 4px solid #ffc1e3;
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+    }
+
+    #loadingText {
+      display: none;
+      margin-top: 10px;
+      font-size: 1em;
+      font-family: 'Gowun Dodum', sans-serif;
+      color: #888;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>오늘 당신에게 무슨 일이 있었나요?</h1>
+
+  <div class="input-box">
+    <input type="text" id="userInput" placeholder="지금 기분이나 하루 이야기를 들려주세요!" />
+    <button onclick="sendToServer()">듣고 싶어요</button>
+  </div>
+
+  <div id="spinner"></div>
+  <div id="loadingText">잠시만 기다려주세요...</div>
+  <div class="result" id="outputText"></div>
+
+  <script>
+    async function sendToServer() {
+      const input = document.getElementById('userInput').value;
+      const output = document.getElementById('outputText');
+      const spinner = document.getElementById('spinner');
+      const loadingText = document.getElementById('loadingText');
+
+      spinner.style.display = 'inline-block';
+      loadingText.style.display = 'block';
+      output.innerHTML = "";
+
+      try {
+        const response = await fetch('https://nuyhsb.onrender.com/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: input }),
+        });
+
+        const data = await response.json();
+        const reply = data.reply || "응답을 받을 수 없어요.";
+
+        const emphasized = reply
+          .replace(/힘들었어요/g, '<span class="highlight">힘들었어요</span>')
+          .replace(/괜찮아/g, '<span class="highlight">괜찮아</span>')
+          .replace(/고마워/g, '<span class="highlight">고마워</span>')
+          .replace(/응원할게/g, '<span class="highlight">응원할게</span>')
+          .replace(/행복해/g, '<span class="highlight">행복해</span>')
+          .replace(/불안해요/g, '<span class="highlight">불안해요</span>');
+
+        spinner.style.display = 'none';
+        loadingText.style.display = 'none';
+        typeWriterHTML(emphasized, output);
+
+      } catch (error) {
+        spinner.style.display = 'none';
+        loadingText.style.display = 'none';
+        output.innerHTML = "오류가 발생했어요. 다시 시도해 주세요.";
       }
-    })(tempDiv);
-
-    let i = 0;
-    element.innerHTML = '';
-
-    function type() {
-      if (i >= queue.length) return;
-      const part = queue[i++];
-      element.innerHTML += part.type === 'text' ? part.char : part.content;
-      setTimeout(type, 20);
     }
 
-    type();
-  }
-</script>
+    function typeWriterHTML(html, element) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+
+      let queue = [];
+      (function extractNodes(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          for (let char of node.textContent) {
+            queue.push({ type: 'text', char });
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const tagStart = `<${node.tagName.toLowerCase()} class="${node.className}">`;
+          const tagEnd = `</${node.tagName.toLowerCase()}>`;
+          queue.push({ type: 'html', content: tagStart });
+          for (let child of node.childNodes) {
+            extractNodes(child);
+          }
+          queue.push({ type: 'html', content: tagEnd });
+        }
+      })(tempDiv);
+
+      let i = 0;
+      element.innerHTML = '';
+
+      function type() {
+        if (i >= queue.length) return;
+        const part = queue[i++];
+        element.innerHTML += part.type === 'text' ? part.char : part.content;
+        setTimeout(type, 20);
+      }
+
+      type();
+    }
+  </script>
+</body>
+</html>
