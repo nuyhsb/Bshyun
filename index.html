@@ -2,48 +2,65 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>하루의 위로</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
-      font-family: 'Pretendard', sans-serif;
+      font-family: 'Gowun Dodum', sans-serif;
       background: linear-gradient(to bottom, #fce4ec, #e3f2fd);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       color: #333;
+      padding: 20px;
     }
 
     h1 {
-      font-size: 2em;
+      font-size: 1.8em;
       margin-bottom: 20px;
+      text-align: center;
     }
 
     .input-box {
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.85);
       padding: 20px;
       border-radius: 12px;
       backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     input {
-      padding: 10px;
+      padding: 12px;
       border: none;
       border-radius: 8px;
-      width: 300px;
-      font-size: 1em;
+      width: 100%;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
     }
 
     button {
-      margin-left: 10px;
-      padding: 10px 15px;
+      padding: 10px 20px;
       background-color: #ffffffcc;
       border: none;
       border-radius: 8px;
       font-weight: bold;
+      font-size: 1em;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #f8bbd0;
     }
 
     .result {
@@ -51,8 +68,14 @@
       font-size: 1.2em;
       max-width: 600px;
       text-align: center;
-      line-height: 1.6;
-      white-space: pre-wrap; /* ← 줄바꿈 유지! */
+      line-height: 1.8;
+      word-break: keep-all;
+      font-family: 'Nanum Pen Script', cursive;
+    }
+
+    .highlight {
+      color: #ff4081;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -82,7 +105,16 @@
         });
 
         const data = await response.json();
-        output.innerHTML = data.reply || "응답을 받을 수 없어요.";
+        const reply = data.reply || "응답을 받을 수 없어요.";
+
+        // 간단한 감성 단어 강조
+        const emphasized = reply
+          .replace(/힘들었어요/g, '<span class="highlight">힘들었어요</span>')
+          .replace(/괜찮아/g, '<span class="highlight">괜찮아</span>')
+          .replace(/고마워/g, '<span class="highlight">고마워</span>')
+          .replace(/응원할게/g, '<span class="highlight">응원할게</span>');
+
+        output.innerHTML = emphasized;
 
       } catch (error) {
         console.error(error);
